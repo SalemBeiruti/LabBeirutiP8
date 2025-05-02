@@ -5,21 +5,41 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed = 10.0f;
-    public float jumpForce = 5;
-    Rigidbody playerRb;
-    // Start is called before the first frame update
+    public float jumpForce = 7f;
+    private Rigidbody playerRb;
+    private bool isGrounded;
+
     void Start()
     {
-        playerRb = GetComponent<Rigidbody>(); 
+        //this is to prevent drags and friction to keep movement constant and smooth
+        playerRb = GetComponent<Rigidbody>();
+        playerRb.freezeRotation = true;
+
+        playerRb.drag = 0;
+        playerRb.angularDrag = 0;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float verticalInput = Input.GetAxis("Vertical");
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
 
-        playerRb.AddForce(Vector3.up * verticalInput * jumpForce, ForceMode.Impulse);
-        playerRb.AddForce(Vector3.right * speed * horizontalInput);
+        Vector3 velocity = playerRb.velocity;
+        velocity.x = horizontalInput * speed;
+        playerRb.velocity = new Vector3(velocity.x, velocity.y, velocity.z);
+
+        // jump only when grounded
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            playerRb.velocity = new Vector3(velocity.x, jumpForce, velocity.z);
+            isGrounded = false;
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
     }
 }
